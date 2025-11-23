@@ -211,7 +211,7 @@ from-yellow-500 via-orange-600 to-red-700' // <-- New Gradient
 
       {/* 🔔 LMS Promo Banner (external link, ad gibi) */}
       <LmsPromoPrompt
-        lmsUrl="https://www.nextinterviewblueprint.com/login" // kendi URL'ini yaz
+        lmsUrl="https://isra-lms-app.vercel.app/" // kendi URL'ini yaz
       />
 
       {/* Chat Floating Icon + Panel */}
