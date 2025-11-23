@@ -14,7 +14,7 @@ import AdminDashboard from './components/AdminDashboard';
 import Layout from './components/Layout';
 import PrayerTimeLanding from './components/PrayerTimeLanding';
 import SuraDashboard from './components/SuraDashboard';
-import UpdatePrompt from './components/UpdatePrompt';
+// import UpdatePrompt from './components/UpdatePrompt';
 import EducatorDashboard from './components/EducatorDashboard';
 import StudentDetail from './components/StudentDetail'; // ✅ new detailed student page
 
@@ -58,7 +58,7 @@ function AppContent({ registerSW }) {
         </Route>
       </Routes>
 
-      <UpdatePrompt registration={swRegistration} />
+      {/* <UpdatePrompt registration={swRegistration} /> */}
     </>
   );
 }
