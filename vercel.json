@@ -1,0 +1,16 @@
+{
+    "redirects": [
+      {
+        "source": "/(.*)",
+        "has": [
+          {
+            "type": "host",
+            "value": "isra-lms-app.vercel.app"
+          }
+        ],
+        "destination": "https://isra-lms-app-weq7.vercel.app/",
+        "permanent": true
+      }
+    ]
+  }
+  

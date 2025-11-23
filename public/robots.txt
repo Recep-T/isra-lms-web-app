@@ -1,0 +1,9 @@
+# Robots.txt for Next Interview Blueprint
+User-agent: *
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /register/
+Disallow: /login/
+Allow: /
+
+Sitemap: https://www.nextinterviewblueprint.com/sitemap.xml
