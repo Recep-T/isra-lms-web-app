@@ -1,5 +1,5 @@
 import './App.css';
-import React, { useState, useEffect } from 'react';
+// import React, { useState, useEffect } from 'react';
 import {
   BrowserRouter as Router,
   Routes,
@@ -25,11 +25,11 @@ function AppContent({ registerSW }) {
     localStorage.getItem('currentUserId') ||
     'guest';
 
-  const [swRegistration, setSwRegistration] = useState(null);
+  // const [swRegistration, setSwRegistration] = useState(null);
 
-  useEffect(() => {
-    if (registerSW) registerSW(setSwRegistration);
-  }, [registerSW]);
+  // useEffect(() => {
+  //   if (registerSW) registerSW(setSwRegistration);
+  // }, [registerSW]);
 
   return (
     <>

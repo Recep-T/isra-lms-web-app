@@ -6,6 +6,7 @@ import QuoteSection from './QuoteSection';
 import AnalogClock from './AnalogClock'; // Assume this is correctly imported
 // import Chat from './Chat';
 import PrayerTimeLanding from './PrayerTimeLanding';
+import LmsPromoPrompt from './UpdatePrompt'; // LMS Promo Banner
 
 // 💡 YENİ: currentUserId prop'u App.jsx'ten alınır
 export default function Layout({ currentUserId = 'guest' }) {
@@ -186,15 +187,12 @@ from-yellow-500 via-orange-600 to-red-700' // <-- New Gradient
         <Outlet />
       </main>
 
-      {/* Footer */}
       <footer className='bg-blue-800 text-white py-4'>
         <div className='max-w-7xl mx-auto px-4 text-center space-y-3'>
-          {/* Copyright */}
           <p className='text-sm md:text-base'>
             &copy; {new Date().getFullYear()} ISRA. All rights reserved.
           </p>
 
-          {/* Support My Team Section */}
           <div className='flex flex-col md:flex-row justify-center items-center gap-2'>
             <span className='text-sm md:text-base'>
               ❤️ Support Us For Better Experience
@@ -210,6 +208,11 @@ from-yellow-500 via-orange-600 to-red-700' // <-- New Gradient
           </div>
         </div>
       </footer>
+
+      {/* 🔔 LMS Promo Banner (external link, ad gibi) */}
+      <LmsPromoPrompt
+        lmsUrl="https://www.nextinterviewblueprint.com/login" // kendi URL'ini yaz
+      />
 
       {/* Chat Floating Icon + Panel */}
       {/* 💡 GÜNCELLEME: Chat bileşenine de currentUserId prop'u iletiliyor */}

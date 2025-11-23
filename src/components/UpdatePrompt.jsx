@@ -1,125 +1,124 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState, useRef } from "react";
+import { HiExternalLink } from "react-icons/hi";
+import { useLocation } from "react-router-dom";
 
-export default function UpdatePrompt({ registration }) {
-  const [showUpdate, setShowUpdate] = useState(false);
-  const [waitingWorker, setWaitingWorker] = useState(null);
-  const [versionInfo, setVersionInfo] = useState({
-    current: '...',
-    new: '...',
-  });
-
-  // 🟢 FADE-OUT KONTROLÜ İÇİN YETERLİDİR
+export default function LmsPromoPrompt({
+  lmsUrl = "https://isra-lms-web-app.vercel.app",
+}) {
+  const [show, setShow] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
+  const location = useLocation();
 
-  // 📦 When update detected
-  const handleUpdateDetected = (worker) => {
-    setWaitingWorker(worker);
-    worker.postMessage({ type: 'GET_VERSION' });
-    setShowUpdate(true);
-  };
+  const showTimerRef = useRef(null);
+  const autoHideTimerRef = useRef(null);
+  const fadeTimerRef = useRef(null);
 
   useEffect(() => {
-    if (!registration) return;
+    // Vercel build / SSR gibi ortamlarda window yoksa hiçbir şey yapma
+    if (typeof window === "undefined") return;
 
-    // 🚨 KONTROL: Prompt'un bir daha görünmesini engelleyen tek anahtar budur.
-    const lastRefreshedVersion = localStorage.getItem('lastRefreshedVersion');
+    // Dashboard içinde gösterme
+    if (location.pathname.startsWith("/sura-dashboard")) return;
 
-    // Request current SW version
-    if (navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({ type: 'GET_VERSION' });
+    let shownThisSession = null;
+    try {
+      shownThisSession = window.sessionStorage.getItem("lmsPromoShown");
+    } catch (err) {
+      // sessionStorage erişilemezse sessizce devam
+      console.warn("[LmsPromoPrompt] sessionStorage not available", err);
     }
 
-    const handleMessage = (event) => {
-      if (event.data?.type === 'VERSION_INFO') {
-        const version = event.data.version;
-        if (registration.waiting) {
-          setVersionInfo((v) => ({ ...v, new: version }));
+    // Session boyunca sadece 1 kez göster
+    if (shownThisSession === "true") return;
 
-          // 🟢 YALNIZCA KULLANICI BU VERSİYONA REFRESH YAPMADIYSA GÖSTER
-          if (version && lastRefreshedVersion !== version) {
-            setShowUpdate(true);
+    // Banner'ı 3 saniye sonra göster
+    showTimerRef.current = window.setTimeout(() => {
+      setShow(true);
 
-            // 🛑 Otomatik gizleme kaldırıldı. Kullanıcı ya tıklar ya da sayfa kapanır.
-            // setTimeout(() => setFadeOut(true), 5000); // ❌ Kaldırıldı!
-          }
-        } else {
-          setVersionInfo((v) => ({ ...v, current: version }));
-        }
+      // Otomatik kapanma (5 saniye sonra)
+      autoHideTimerRef.current = window.setTimeout(() => {
+        setFadeOut(true);
+        fadeTimerRef.current = window.setTimeout(() => setShow(false), 500);
+      }, 5000);
+
+      // Session'da bir daha gösterme
+      try {
+        window.sessionStorage.setItem("lmsPromoShown", "true");
+      } catch (err) {
+        console.warn("[LmsPromoPrompt] cannot write to sessionStorage", err);
       }
+    }, 3000);
+
+    // Cleanup: route değişince veya component unmount olunca tüm timer’ları temizle
+    return () => {
+      if (showTimerRef.current) window.clearTimeout(showTimerRef.current);
+      if (autoHideTimerRef.current) window.clearTimeout(autoHideTimerRef.current);
+      if (fadeTimerRef.current) window.clearTimeout(fadeTimerRef.current);
     };
-    navigator.serviceWorker.addEventListener('message', handleMessage);
+  }, [location.pathname]); // sadece pathname değişince tetiklensin
 
-    const listener = () => {
-      const newWorker = registration.installing;
-      if (!newWorker) return;
-
-      newWorker.addEventListener('statechange', () => {
-        if (newWorker.state === 'installed' && registration.waiting) {
-          handleUpdateDetected(registration.waiting);
-          registration.waiting.postMessage({ type: 'GET_VERSION' });
-        }
+  const handleOpenLms = () => {
+    if (typeof window !== "undefined" && window.gtag) {
+      window.gtag("event", "click_lms_promo", {
+        event_category: "engagement",
+        event_label: "ISRA_LMS_Promo",
       });
-    };
-    registration.addEventListener('updatefound', listener);
-
-    if (registration.waiting) {
-      handleUpdateDetected(registration.waiting);
     }
 
-    return () => {
-      registration.removeEventListener('updatefound', listener);
-      navigator.serviceWorker.removeEventListener('message', handleMessage);
-    };
-  }, [registration]);
+    if (typeof window !== "undefined") {
+      window.open(lmsUrl, "_blank", "noopener,noreferrer");
+    }
 
-  // 🔁 User confirms update
-  const updateApp = () => {
-    if (!waitingWorker) return;
-
-    // 🟢 ÇÖZÜM: Kullanıcının bu versiyonu güncellediğini kaydet.
-    // Bu, prompt'un bir daha görünmesini ENGELLEYECEK tek anahtardır.
-    localStorage.setItem('lastRefreshedVersion', versionInfo.new);
-
-    waitingWorker.postMessage({ type: 'SKIP_WAITING' });
-
-    // Instantly fade out
+    // Kapanış animasyonu
     setFadeOut(true);
-
-    // Reload after short delay (Fade-out animasyonunun bitmesini bekle)
-    setTimeout(() => window.location.reload(), 1200000);
+    if (fadeTimerRef.current) window.clearTimeout(fadeTimerRef.current);
+    fadeTimerRef.current = window.setTimeout(() => setShow(false), 500);
   };
 
-  // 🪄 Smooth fade-out effect (Kaybolma animasyonu)
-  useEffect(() => {
-    if (fadeOut) {
-      const timer = setTimeout(() => setShowUpdate(false), 500); // hide after animation
-      return () => clearTimeout(timer);
-    }
-  }, [fadeOut]);
+  const handleClose = () => {
+    setFadeOut(true);
+    if (fadeTimerRef.current) window.clearTimeout(fadeTimerRef.current);
+    fadeTimerRef.current = window.setTimeout(() => setShow(false), 500);
+  };
 
-  if (!showUpdate) return null;
+  if (!show) return null;
 
   return (
     <div
       className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 
-        bg-gradient-to-r from-green-500 to-emerald-600 text-white 
+        bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white 
         px-4 py-3 rounded-2xl shadow-xl z-[100] w-[90%] sm:w-auto 
         text-center transition-all duration-500 ${
-          fadeOut ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'
+          fadeOut ? "opacity-0 translate-y-4" : "opacity-100 translate-y-0"
         }`}
     >
-      <div className='flex flex-col items-center justify-center space-y-2'>
-        <span className='font-semibold text-sm sm:text-base'>
-          New version available!
-        </span>
+      <div className="flex items-center space-x-3">
+        <div className="flex-1 text-left">
+          <p className="font-semibold text-sm sm:text-base">
+            Track your team&apos;s Quran & progress 📊
+          </p>
+          <p className="text-xs sm:text-sm opacity-90">
+            Open ISRA LMS dashboard to manage students, teams and tasks in one place.
+          </p>
+        </div>
 
+        {/* Open LMS */}
         <button
-          onClick={updateApp}
-          className='mt-2 px-5 py-1.5 bg-white text-green-700 font-medium 
-            rounded-full text-sm shadow-md hover:bg-green-100 active:scale-95 
-            transition-all duration-300'
+          onClick={handleOpenLms}
+          className="px-4 py-1.5 bg-white text-indigo-700 font-semibold 
+            rounded-full text-xs sm:text-sm shadow-md hover:bg-indigo-100 
+            active:scale-95 transition-all duration-300 flex items-center"
         >
-          Refresh
+          Open LMS
+          <HiExternalLink className="ml-1 w-4 h-4" />
+        </button>
+
+        {/* Close */}
+        <button
+          onClick={handleClose}
+          className="ml-1 text-white/80 hover:text-white text-sm px-1"
+        >
+          ✕
         </button>
       </div>
     </div>
